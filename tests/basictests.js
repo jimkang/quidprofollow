@@ -2,6 +2,27 @@ var test = require('tape');
 var quidprofollow = require('../quidprofollow');
 var conformAsync = require('conform-async');
 
+var mockTwitterConfig = {
+  consumer_key: 'asdfkljqwerjasdfalpsdfjas',
+  consumer_secret: 'asdfasdjfbkjqwhbefubvskjhfbgasdjfhgaksjdhfgaksdxvc',
+  access_token: '9999999999-zxcvkljhpoiuqwerkjhmnb,mnzxcvasdklfhwer',
+  access_token_secret: 'opoijkljsadfbzxcnvkmokwertlknfgmoskdfgossodrh'
+};
+
+function mockGet(path, getDone) {
+  if (path == 'followers/ids') {
+    return {
+      ids: [1, 2, 3, 4, 5, 6, 7, 8]
+    }
+  }
+  else if (path === 'friends/ids') {
+    return {
+      ids: [5, 6, 7, 8, 9, 10, 11, 12]
+    }
+  }
+  conformAsync.callBackOnNextTick(getDone);
+}
+
 test('Basic test', function basicTest(t) {
   t.plan(19);
 
@@ -9,26 +30,9 @@ test('Basic test', function basicTest(t) {
   var unfollowCalls = 0;
 
   quidprofollow({
-    twitterAPIKeys: {
-      consumer_key: 'asdfkljqwerjasdfalpsdfjas',
-      consumer_secret: 'asdfasdjfbkjqwhbefubvskjhfbgasdjfhgaksjdhfgaksdxvc',
-      access_token: '9999999999-zxcvkljhpoiuqwerkjhmnb,mnzxcvasdklfhwer',
-      access_token_secret: 'opoijkljsadfbzxcnvkmokwertlknfgmoskdfgossodrh'
-    },
+    twitterAPIKeys: mockTwitterConfig,
     twit: {
-      get: function mockGet(path, getDone) {
-        if (path == 'followers/ids') {
-          return {
-            ids: [1, 2, 3, 4, 5, 6, 7, 8]
-          }
-        }
-        else if (path === 'friends/ids') {
-          return {
-            ids: [5, 6, 7, 8, 9, 10, 11, 12]
-          }
-        }
-        conformAsync.callBackOnNextTick(getDone);
-      },
+      get: mockGet,
       post: function mockPost(path, opts, postDone) {
         if (path === 'friendships/create') {
           var expectedFriendId = followCalls + 1;
@@ -47,8 +51,42 @@ test('Basic test', function basicTest(t) {
     }
   },
   function done(error, followed, unfollowed) {
-    t.ok(!error, 'It completes withouth an error');
+    t.ok(!error, 'It completes without an error');
     t.deepEqual(followed, [1, 2, 3, 4], 'It reports userIds it followed.');
     t.deepEqual(unfollowed, [9, 10, 11, 12], 'It reports userIds unfollowed.');
+  });
+});
+
+
+test('Follow filter test', function followFilterTest(t) {
+  t.plan(8);
+
+  quidprofollow({
+    twitterAPIKeys: mockTwitterConfig,
+    twit: {
+      get: mockGet,
+      post: function mockPost(path, opts, postDone) {
+        if (path === 'friendships/create') {
+          // Should be executed twice.
+          t.ok(opts.id > 2, 'Does not follow filtered users.');
+          t.ok(opts.id < 5, 'Does not follow already followed users.');
+        }
+        conformAsync.callBackOnNextTick(postDone);
+      },
+      followFilter: function simpleFollowFilter(userIds, ffDone) {
+        // Should be called four times.
+        t.deepEqual(userIds, [1, 2, 3, 4], 
+          'Calls filter with potential followees.'
+        );
+        var okIds = userIds.filter(function isOver2(userId) {
+          return userId > 2;
+        });
+        conformAsync.callBackOnNextTick(ffDone, null, okIds);
+      }
+    }
+  },
+  function done(error, followed, unfollowed) {
+    t.ok(!error, 'It completes without an error');
+    t.deepEqual(followed, [3, 4], 'It reports userIds it followed.');
   });
 });
