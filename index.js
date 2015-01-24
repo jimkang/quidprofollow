@@ -21,7 +21,8 @@ function quidprofollow(opts, done) {
     }
   }
 
-  var q = queue();  
+  var q = queue();
+
   q.defer(twit.get.bind(twit), 'followers/ids');
   q.defer(twit.get.bind(twit), 'friends/ids');
 
@@ -33,22 +34,29 @@ function quidprofollow(opts, done) {
       var followers = followerResponse.ids;
       var friends = friendResponse.ids;
 
-      var followersNotCurrentlyFollowed = 
-        _.without.apply(_, [followers].concat(friends));
-
-      var followeesCurrentNotFollowingMe = 
-        _.without.apply(_, [friends].concat(followers));
+      // Followers not followed by the user.
+      var usersToFollow = _.without.apply(_, [followers].concat(friends));
+      // Followees not following the user.
+      var usersToUnfollow = _.without.apply(_, [friends].concat(followers));
 
       safeTwitPost = twit.post.bind(twit);
 
-
-      var usersToFollow = followersNotCurrentlyFollowed;
-      // if (opts.followFilter) {
-
-      // }
-      adjustFollowerList(
-        safeTwitPost, usersToFollow, followeesCurrentNotFollowingMe, done
-      );
+      if (opts.followFilter) {
+        opts.followFilter(
+          usersToFollow, 
+          function filterDone(error, okIds) {
+            if (error) {
+              done(error);
+            }
+            else {
+              adjustFollowerList(safeTwitPost, okIds, usersToUnfollow, done);
+            }
+          }
+        );
+      }
+      else {
+        adjustFollowerList(safeTwitPost, usersToFollow, usersToUnfollow, done);        
+      }
     }
   });
 }
