@@ -39,33 +39,42 @@ function quidprofollow(opts, done) {
       var followeesCurrentNotFollowingMe = 
         _.without.apply(_, [friends].concat(followers));
 
-      var followUnfollowQueue = queue();
       safeTwitPost = twit.post.bind(twit);
 
-      followersNotCurrentlyFollowed.forEach(function queueFollow(userId) {
-        followUnfollowQueue.defer(
-          safeTwitPost, 'friendships/create', {id: userId}
-        );
-      });
 
-      followeesCurrentNotFollowingMe.forEach(function queueUnfollow(userId) {
-        followUnfollowQueue.defer(
-          safeTwitPost, 'friendships/destroy', {id: userId}
-        );
-      });
+      var usersToFollow = followersNotCurrentlyFollowed;
+      // if (opts.followFilter) {
 
-      followUnfollowQueue.awaitAll(function reportResults(error) {
-        if (error) {
-          done(error);
-        }
-        else {
-          done(
-            null, followersNotCurrentlyFollowed, followeesCurrentNotFollowingMe
-          );
-        }
-      });
+      // }
+      adjustFollowerList(
+        safeTwitPost, usersToFollow, followeesCurrentNotFollowingMe, done
+      );
     }
   });
+}
+
+function adjustFollowerList(twitPost, usersToFollow, usersToUnfollow, done) {
+  var q = queue();
+
+  q.defer(postUsers, twitPost, 'friendships/create', usersToFollow);
+  q.defer(postUsers, twitPost, 'friendships/destroy', usersToUnfollow);
+
+  q.awaitAll(function reportResults(error, followResponse, unfollowResponse) {
+    if (error) {
+      done(error);
+    }
+    else {
+      done(null, usersToFollow, usersToUnfollow);
+    }
+  });
+}
+
+function postUsers(twitPost, path, userIds, done) {
+  var q = queue();
+  userIds.forEach(function queueFollow(userId) {
+    q.defer(twitPost, path, {id: userId});
+  });
+  q.awaitAll(done);
 }
 
 module.exports = quidprofollow;
