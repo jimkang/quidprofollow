@@ -1,0 +1,26 @@
+{
+  "name": "quidprofollow",
+  "version": "1.0.0",
+  "description": "Ensures that a Twitter user's followers and followees lists are the same.",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jimkang/quidprofollow.git"
+  },
+  "keywords": [],
+  "author": "Jim Kang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jimkang/quidprofollow/issues"
+  },
+  "homepage": "https://github.com/jimkang/quidprofollow",
+  "devDependencies": {
+    "tape": "^3.0.3"
+  },
+  "dependencies": {
+    "conform-async": "^1.1.1"
+  }
+}
