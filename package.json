@@ -24,6 +24,7 @@
     "conform-async": "^1.1.1",
     "lodash": "^2.4.1",
     "queue-async": "^1.0.7",
-    "twit": "^1.1.19"
+    "twit": "^1.1.19",
+    "twitterjerkdetector": "^1.0.0"
   }
 }

@@ -1,15 +1,23 @@
 var test = require('tape');
 var quidprofollow = require('../index');
 var conformAsync = require('conform-async');
+var twitterjerkdetector = require('twitterjerkdetector');
+
 var config = require('../config').twitter;
 var Twit = require('twit');
 var twit = new Twit(config);
+
+var filterJerkAccounts = twitterjerkdetector.createFilter({
+  twit: twit
+});
 
 // The results of this test vary, depending on the followers and followees of 
 // of the config's account at the moment. So, run it and watch the console 
 // output.
 
 test('Run it without actually following/unfollowing', function run(t) {
+  t.plan(3);
+
   quidprofollow({
     twitterAPIKeys: config,
     twit: {
@@ -23,7 +31,8 @@ test('Run it without actually following/unfollowing', function run(t) {
         }
         conformAsync.callBackOnNextTick(postDone);
       }
-    }
+    },
+    followFilter: filterJerkAccounts
   },
   function done(error, followed, unfollowed) {
     t.ok(!error, 'It completes without an error');
