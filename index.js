@@ -80,9 +80,21 @@ function adjustFollowerList(twitPost, usersToFollow, usersToUnfollow, done) {
 function postUsers(twitPost, path, userIds, done) {
   var q = queue();
   userIds.forEach(function queueFollow(userId) {
-    q.defer(twitPost, path, {id: userId});
+    q.defer(wrapTwitPost, twitPost, path, {id: userId});
   });
   q.awaitAll(done);
+}
+
+function wrapTwitPost(twitPost, path, opts, done) {
+  twitPost(path, opts, function twitPostDone(error, response) {
+    // 403 (already following the user) can be ignored.
+    if (error && (!error.statusCode || error.statusCode !== 403)) {
+      done(error, response);
+    }
+    else {
+      done(null, response);
+    }
+  });
 }
 
 module.exports = quidprofollow;

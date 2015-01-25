@@ -33,10 +33,19 @@ test('Basic test', function basicTest(t) {
     twit: {
       get: mockGet,
       post: function mockPost(path, opts, postDone) {
+        var error = null;
         if (path === 'friendships/create') {
           var expectedFriendId = followCalls + 1;
           t.equal(opts.id, expectedFriendId);
           t.ok(opts.id < 5, 'Does not follow already followed users.');
+
+          if (expectedFriendId === 2) {
+            // Simulate following someone that's already been followed.
+            // Should keep going after this error.
+            error = new Error('You\'ve already requested to follow smidgeo.');
+            error.statusCode = 403;
+          }
+
           followCalls += 1;
         }
         else if (path === 'friendships/destroy') {
@@ -45,7 +54,7 @@ test('Basic test', function basicTest(t) {
           t.ok(opts.id < 13, 'Does unfollow users not in the friends list.');
           unfollowCalls += 1;
         }
-        conformAsync.callBackOnNextTick(postDone);
+        conformAsync.callBackOnNextTick(postDone, error);
       }
     }
   },
