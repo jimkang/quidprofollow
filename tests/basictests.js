@@ -97,3 +97,36 @@ test('Follow filter test', function followFilterTest(t) {
     t.deepEqual(followed, [3, 4], 'It reports userIds it followed.');
   });
 });
+
+test('Retain filter test', function retainFilterTest(t) {
+  t.plan(7);
+
+  quidprofollow({
+    twitterAPIKeys: mockTwitterConfig,
+    twit: {
+      get: mockGet,
+      post: function mockPost(path, opts, postDone) {
+        if (path === 'friendships/destroy') {
+          // Should be executed twice.
+          debugger;
+          t.ok(opts.id < 11, 'Does not unfollow retained users.');
+          t.ok(opts.id > 8, 'Does not unfollow mutual followers.');
+        }
+        conformAsync.callBackOnNextTick(postDone);
+      }
+    },
+    retainFilter: function simpleRetainFilter(userIds, ffDone) {
+      t.deepEqual(userIds, [9, 10, 11, 12], 
+        'Calls filter with potential unfollowees.'
+      );
+      var okIds = userIds.filter(function isOver10(userId) {
+        return userId > 10;
+      });
+      conformAsync.callBackOnNextTick(ffDone, null, okIds);
+    }
+  },
+  function done(error, followed, unfollowed) {
+    t.ok(!error, 'It completes without an error');
+    t.deepEqual(unfollowed, [9, 10], 'It reports userIds it unfollowed.');
+  });
+});

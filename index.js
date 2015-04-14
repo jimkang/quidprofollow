@@ -26,7 +26,9 @@ function quidprofollow(opts, done) {
   q.defer(twit.get.bind(twit), 'followers/ids');
   q.defer(twit.get.bind(twit), 'friends/ids');
 
-  q.await(function adjustFollowers(error, followerResponse, friendResponse) {
+  q.await(adjustFollowers);
+
+  function adjustFollowers(error, followerResponse, friendResponse) {
     if (error) {
       done(error);
     }
@@ -41,24 +43,39 @@ function quidprofollow(opts, done) {
 
       safeTwitPost = twit.post.bind(twit);
 
+      var q = queue();
+
       if (opts.followFilter) {
-        opts.followFilter(
-          usersToFollow, 
-          function filterDone(error, okIds) {
-            if (error) {
-              done(error);
-            }
-            else {
-              adjustFollowerList(safeTwitPost, okIds, usersToUnfollow, done);
-            }
-          }
-        );
+        // opts.followFilter(usersToFollow, followFilterDone);
+        q.defer(opts.followFilter, usersToFollow);
       }
-      else {
-        adjustFollowerList(safeTwitPost, usersToFollow, usersToUnfollow, done);        
+
+      if (opts.retainFilter) {
+        q.defer(opts.retainFilter, usersToUnfollow);
       }
+
+      q.await(runAdjustment);
     }
-  });
+
+    function runAdjustment(error, list1, list2) {
+      if (opts.followFilter && opts.retainFilter) {
+        usersToFollow = list1;
+        usersToUnfollow = removeArrayFromOtherArray(list2, usersToUnfollow);
+      }
+      else if (opts.followFilter) {
+        usersToFollow = list1;
+      }
+      else if (opts.retainFilter) {
+        usersToUnfollow = removeArrayFromOtherArray(list1, usersToUnfollow);
+      }
+
+      adjustFollowerList(safeTwitPost, usersToFollow, usersToUnfollow, done);
+    }
+  }
+}
+
+function removeArrayFromOtherArray(array, otherArray) {
+  return _.without.apply(_.without, [otherArray].concat(array));
 }
 
 function adjustFollowerList(twitPost, usersToFollow, usersToUnfollow, done) {
