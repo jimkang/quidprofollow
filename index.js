@@ -58,7 +58,10 @@ function quidprofollow(opts, done) {
     }
 
     function runAdjustment(error, list1, list2) {
-      if (opts.followFilter && opts.retainFilter) {
+      if (error) {
+        console.log(error, error.stack);
+      }
+      else if (opts.followFilter && opts.retainFilter) {
         usersToFollow = list1;
         usersToUnfollow = removeArrayFromOtherArray(list2, usersToUnfollow);
       }
