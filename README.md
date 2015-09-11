@@ -44,9 +44,10 @@ You can also pass a `followFilter` in the opts, which should be a function that 
           });
           conformAsync.callBackOnNextTick(done, null, okIds);          
         },
-        function done(error, followed, unfollowed) {
+        function done(error, followed, unfollowed, filteredOut) {
           console.log('Followed:', followed);
           console.log('Unfollowed:', unfollowed);
+          console.log('Filtered out:', filteredOut);
         }
     );
 

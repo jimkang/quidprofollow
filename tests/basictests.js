@@ -67,7 +67,7 @@ test('Basic test', function basicTest(t) {
 
 
 test('Follow filter test', function followFilterTest(t) {
-  t.plan(7);
+  t.plan(8);
 
   quidprofollow({
     twitterAPIKeys: mockTwitterConfig,
@@ -86,15 +86,17 @@ test('Follow filter test', function followFilterTest(t) {
       t.deepEqual(userIds, [1, 2, 3, 4], 
         'Calls filter with potential followees.'
       );
-      var okIds = userIds.filter(function isOver2(userId) {
-        return userId > 2;
-      });
-      conformAsync.callBackOnNextTick(ffDone, null, okIds);
+      var reports = {
+        coolguys: [3, 4],
+        jerks: [1, 2]
+      };
+      conformAsync.callBackOnNextTick(ffDone, null, reports);
     }
   },
-  function done(error, followed, unfollowed) {
+  function done(error, followed, unfollowed, usersFilteredOut) {
     t.ok(!error, 'It completes without an error');
     t.deepEqual(followed, [3, 4], 'It reports userIds it followed.');
+    t.deepEqual(usersFilteredOut, [1, 2], 'It reports users it filtered out.');
   });
 });
 
@@ -108,7 +110,6 @@ test('Retain filter test', function retainFilterTest(t) {
       post: function mockPost(path, opts, postDone) {
         if (path === 'friendships/destroy') {
           // Should be executed twice.
-          debugger;
           t.ok(opts.id < 11, 'Does not unfollow retained users.');
           t.ok(opts.id > 8, 'Does not unfollow mutual followers.');
         }

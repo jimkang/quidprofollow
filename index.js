@@ -58,21 +58,38 @@ function quidprofollow(opts, done) {
     }
 
     function runAdjustment(error, list1, list2) {
+      var followFilterResults = [];
+      var usersToRetain = [];
+
+      if (opts.followFilter) {
+        followFilterResults = list1;
+        usersToFollow = followFilterResults.coolguys;
+
+        if (opts.retainFilter) {
+          usersToRetain = list2;
+        }
+      }
+      else if (opts.retainFilter) {
+        usersToRetain = list1;
+      }
+
       if (error) {
         console.log(error, error.stack);
       }
-      else if (opts.followFilter && opts.retainFilter) {
-        usersToFollow = list1;
-        usersToUnfollow = removeArrayFromOtherArray(list2, usersToUnfollow);
-      }
-      else if (opts.followFilter) {
-        usersToFollow = list1;
-      }
-      else if (opts.retainFilter) {
-        usersToUnfollow = removeArrayFromOtherArray(list1, usersToUnfollow);
-      }
 
-      adjustFollowerList(safeTwitPost, usersToFollow, usersToUnfollow, done);
+      usersToUnfollow = removeArrayFromOtherArray(
+        usersToRetain, usersToUnfollow
+      );
+      
+      adjustFollowerList(
+        {
+          twitPost: safeTwitPost,
+          usersToFollow: usersToFollow,
+          usersToUnfollow: usersToUnfollow,
+          usersFilteredOut: followFilterResults.jerks
+        },
+        done
+      );
     }
   }
 }
@@ -81,7 +98,19 @@ function removeArrayFromOtherArray(array, otherArray) {
   return _.without.apply(_.without, [otherArray].concat(array));
 }
 
-function adjustFollowerList(twitPost, usersToFollow, usersToUnfollow, done) {
+function adjustFollowerList(opts, done) {
+  var twitPost;
+  var usersToFollow;
+  var usersToUnfollow;
+  var usersFilteredOut;
+
+  if (opts) {
+    twitPost = opts.twitPost;
+    usersToFollow = opts.usersToFollow;
+    usersToUnfollow = opts.usersToUnfollow;
+    usersFilteredOut = opts.usersFilteredOut;
+  }
+
   var q = queue();
 
   q.defer(postUsers, twitPost, 'friendships/create', usersToFollow);
@@ -92,7 +121,7 @@ function adjustFollowerList(twitPost, usersToFollow, usersToUnfollow, done) {
       done(error);
     }
     else {
-      done(null, usersToFollow, usersToUnfollow);
+      done(null, usersToFollow, usersToUnfollow, usersFilteredOut);
     }
   });
 }
