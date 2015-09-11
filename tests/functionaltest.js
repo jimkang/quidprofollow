@@ -1,6 +1,6 @@
 var test = require('tape');
 var quidprofollow = require('../index');
-var conformAsync = require('conform-async');
+var callNextTick = require('call-next-tick');
 var twitterjerkdetector = require('twitterjerkdetector');
 
 var config = require('../config').twitter;
@@ -29,7 +29,7 @@ test('Run it without actually following/unfollowing', function run(t) {
         else if (path === 'friendships/destroy') {
           console.log('Would have unfollowed:', opts);
         }
-        conformAsync.callBackOnNextTick(postDone);
+        callNextTick(postDone);
       }
     },
     followFilter: filterJerkAccounts

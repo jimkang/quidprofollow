@@ -1,7 +1,7 @@
 var Twit = require('twit');
 var _ = require('lodash');
 var queue = require('queue-async');
-var conformAsync = require('conform-async');
+var callNextTick = require('call-next-tick');
 
 function quidprofollow(opts, done) {
   var twit;
@@ -14,9 +14,7 @@ function quidprofollow(opts, done) {
       var twit = new Twit(opts.twitterAPIKeys);
     }
     else {      
-      conformAsync.callBackOnNextTick(
-        done, new Error('No Twitter config provided.')
-      );
+      callNextTick(done, new Error('No Twitter config provided.'));
       return;
     }
   }
@@ -58,6 +56,11 @@ function quidprofollow(opts, done) {
     }
 
     function runAdjustment(error, list1, list2) {
+      if (error) {
+        done(error);
+        return;
+      }
+
       var followFilterResults = [];
       var usersToRetain = [];
 
@@ -71,10 +74,6 @@ function quidprofollow(opts, done) {
       }
       else if (opts.retainFilter) {
         usersToRetain = list1;
-      }
-
-      if (error) {
-        console.log(error, error.stack);
       }
 
       usersToUnfollow = removeArrayFromOtherArray(
@@ -127,6 +126,10 @@ function adjustFollowerList(opts, done) {
 }
 
 function postUsers(twitPost, path, userIds, done) {
+  if (!userIds) {
+    callNextTick(done);
+    return;
+  }
   var q = queue();
   userIds.forEach(function queueFollow(userId) {
     q.defer(wrapTwitPost, twitPost, path, {id: userId});

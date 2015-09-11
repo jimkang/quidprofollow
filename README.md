@@ -42,7 +42,7 @@ You can also pass a `followFilter` in the opts, which should be a function that 
           var okIds = userIds.filter(function isOver100Million(userId) {
             return userId > 100000000;
           });
-          conformAsync.callBackOnNextTick(done, null, okIds);          
+          callNextTick(done, null, okIds);
         },
         function done(error, followed, unfollowed, filteredOut) {
           console.log('Followed:', followed);

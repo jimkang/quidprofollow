@@ -1,6 +1,6 @@
 var test = require('tape');
 var quidprofollow = require('../index');
-var conformAsync = require('conform-async');
+var callNextTick = require('call-next-tick');
 
 var mockTwitterConfig = {
   consumer_key: 'asdfkljqwerjasdfalpsdfjas',
@@ -11,12 +11,12 @@ var mockTwitterConfig = {
 
 function mockGet(path, getDone) {
   if (path == 'followers/ids') {
-    conformAsync.callBackOnNextTick(getDone, null, {
+    callNextTick(getDone, null, {
       ids: [1, 2, 3, 4, 5, 6, 7, 8]
     });
   }
   else if (path === 'friends/ids') {
-    conformAsync.callBackOnNextTick(getDone, null, {
+    callNextTick(getDone, null, {
       ids: [5, 6, 7, 8, 9, 10, 11, 12]
     });
   }
@@ -54,7 +54,7 @@ test('Basic test', function basicTest(t) {
           t.ok(opts.id < 13, 'Does unfollow users not in the friends list.');
           unfollowCalls += 1;
         }
-        conformAsync.callBackOnNextTick(postDone, error);
+        callNextTick(postDone, error);
       }
     }
   },
@@ -79,7 +79,7 @@ test('Follow filter test', function followFilterTest(t) {
           t.ok(opts.id > 2, 'Does not follow filtered users.');
           t.ok(opts.id < 5, 'Does not follow already followed users.');
         }
-        conformAsync.callBackOnNextTick(postDone);
+        callNextTick(postDone);
       }
     },
     followFilter: function simpleFollowFilter(userIds, ffDone) {
@@ -90,7 +90,7 @@ test('Follow filter test', function followFilterTest(t) {
         coolguys: [3, 4],
         jerks: [1, 2]
       };
-      conformAsync.callBackOnNextTick(ffDone, null, reports);
+      callNextTick(ffDone, null, reports);
     }
   },
   function done(error, followed, unfollowed, usersFilteredOut) {
@@ -113,7 +113,7 @@ test('Retain filter test', function retainFilterTest(t) {
           t.ok(opts.id < 11, 'Does not unfollow retained users.');
           t.ok(opts.id > 8, 'Does not unfollow mutual followers.');
         }
-        conformAsync.callBackOnNextTick(postDone);
+        callNextTick(postDone);
       }
     },
     retainFilter: function simpleRetainFilter(userIds, ffDone) {
@@ -123,7 +123,7 @@ test('Retain filter test', function retainFilterTest(t) {
       var okIds = userIds.filter(function isOver10(userId) {
         return userId > 10;
       });
-      conformAsync.callBackOnNextTick(ffDone, null, okIds);
+      callNextTick(ffDone, null, okIds);
     }
   },
   function done(error, followed, unfollowed) {
