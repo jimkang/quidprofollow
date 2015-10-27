@@ -55,6 +55,8 @@ You can also pass a `followFilter` in the opts, which should be a function that 
 Tests
 -----
 
+[![Build Status](https://travis-ci.org/jimkang/quidprofollow.svg?branch=master)](https://travis-ci.org/jimkang/quidprofollow)
+
 Run tests with `make test`.
 
 Run functional test by creating a `config.js` (be careful not to check that in anywhere) in the root directory that looks like this:
