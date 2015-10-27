@@ -43,12 +43,13 @@ You can also pass a `followFilter` in the opts, which should be a function that 
             return userId > 100000000;
           });
           callNextTick(done, null, okIds);
-        },
-        function done(error, followed, unfollowed, filteredOut) {
-          console.log('Followed:', followed);
-          console.log('Unfollowed:', unfollowed);
-          console.log('Filtered out:', filteredOut);
         }
+      },
+      function done(error, followed, unfollowed, filteredOut) {
+        console.log('Followed:', followed);
+        console.log('Unfollowed:', unfollowed);
+        console.log('Filtered out:', filteredOut);
+      }
     );
 
 Tests
