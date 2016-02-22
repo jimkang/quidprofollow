@@ -57,8 +57,10 @@ function quidprofollow(opts, done) {
 
     function runAdjustment(error, list1, list2) {
       if (error) {
-        done(error);
-        return;
+        // An error may have occured because a followFilter hit the
+        // users/profile rate limit. It is not reason to not carry through
+        // with the lists we did get.
+        console.log(error, error.stack);
       }
 
       var followFilterResults = [];
