@@ -1,6 +1,8 @@
-var test = require('tape');
+var test = require('tap').test;
 var quidprofollow = require('../index');
 var callNextTick = require('call-next-tick');
+// var url = require('url');
+require('longjohn');
 
 var mockTwitterConfig = {
   consumer_key: 'asdfkljqwerjasdfalpsdfjas',
@@ -9,17 +11,38 @@ var mockTwitterConfig = {
   access_token_secret: 'opoijkljsadfbzxcnvkmokwertlknfgmoskdfgossodrh'
 };
 
-function mockGet(path, getDone) {
+function mockGet(path, opts, getDone) {
+  var cursor = opts.cursor;
+  var response;
+
   if (path == 'followers/ids') {
-    callNextTick(getDone, null, {
-      ids: [1, 2, 3, 4, 5, 6, 7, 8]
-    });
+    if (cursor === '-1') {
+      response = {
+        ids: [1, 2, 3, 4, 5],
+        next_cursor_str: '5'
+      };
+    }
+    else if (cursor === '5') {
+      response = {
+        ids: [6, 7, 8]
+      };
+    }
   }
   else if (path === 'friends/ids') {
-    callNextTick(getDone, null, {
-      ids: [5, 6, 7, 8, 9, 10, 11, 12]
-    });
+    if (cursor === '-1') {
+      response = {
+        ids: [5, 6, 7, 8, 9],
+        next_cursor_str: '9'
+      };
+    }
+    else if (cursor === '9') {
+      response = {
+        ids: [10, 11, 12]
+      };
+    }
   }
+
+  callNextTick(getDone, null, response);
 }
 
 test('Basic test', function basicTest(t) {
@@ -74,6 +97,7 @@ test('Follow filter test', function followFilterTest(t) {
     twit: {
       get: mockGet,
       post: function mockPost(path, opts, postDone) {
+
         if (path === 'friendships/create') {
           // Should be executed twice.
           t.ok(opts.id > 2, 'Does not follow filtered users.');

@@ -1,6 +1,6 @@
 {
   "name": "quidprofollow",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Makes a Twitter bot's (or human user's) follower and followee lists match by following and unfollowing to make it happen.",
   "main": "index.js",
   "scripts": {
@@ -18,12 +18,15 @@
   },
   "homepage": "https://github.com/jimkang/quidprofollow",
   "devDependencies": {
+    "longjohn": "^0.2.11",
+    "tap": "^5.7.0",
     "tape": "^3.0.3"
   },
   "dependencies": {
     "call-next-tick": "^1.1.2",
     "lodash": "^2.4.1",
     "queue-async": "^1.0.7",
+    "standard-bail": "^2.0.0",
     "twit": "^1.1.19",
     "twitterjerkdetector": "^2.0.1"
   }

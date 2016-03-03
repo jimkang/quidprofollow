@@ -2,6 +2,7 @@ var Twit = require('twit');
 var _ = require('lodash');
 var queue = require('queue-async');
 var callNextTick = require('call-next-tick');
+var getCursoredResource = require('./get-cursored-resource');
 
 function quidprofollow(opts, done) {
   var twit;
@@ -21,19 +22,28 @@ function quidprofollow(opts, done) {
 
   var q = queue();
 
-  q.defer(twit.get.bind(twit), 'followers/ids');
-  q.defer(twit.get.bind(twit), 'friends/ids');
+  var getFollowersOpts = {
+    twit: twit,
+    path: 'followers/ids',
+    responseValueKey: 'ids'
+  };
+
+  var getFriendsOpts = {
+    twit: twit,
+    path: 'friends/ids',
+    responseValueKey: 'ids'
+  };
+
+  q.defer(getCursoredResource, getFollowersOpts);
+  q.defer(getCursoredResource, getFriendsOpts);
 
   q.await(adjustFollowers);
 
-  function adjustFollowers(error, followerResponse, friendResponse) {
+  function adjustFollowers(error, followers, friends) {
     if (error) {
       done(error);
     }
     else {
-      var followers = followerResponse.ids;
-      var friends = friendResponse.ids;
-
       // Followers not followed by the user.
       var usersToFollow = _.without.apply(_, [followers].concat(friends));
       // Followees not following the user.
