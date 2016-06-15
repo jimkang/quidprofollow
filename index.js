@@ -152,7 +152,10 @@ function postUsers(twitPost, path, userIds, done) {
 function wrapTwitPost(twitPost, path, opts, done) {
   twitPost(path, opts, function twitPostDone(error, response) {
     // 403 (already following the user) can be ignored.
-    if (error && (!error.statusCode || error.statusCode !== 403)) {
+    // 404 (user may have deleted their account) can be ignored.
+    if (error &&
+      (!error.statusCode || (error.statusCode !== 403 && error.statusCode !== 404))) {
+
       done(error, response);
     }
     else {
